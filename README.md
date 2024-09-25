@@ -17,15 +17,15 @@ This is a fast & light Markdown to HTML converter written in Zig. It transforms 
 
 ## Installation
 
-1. Ensure you have Zig installed on your system. If not, download it from [the official Zig website](https://ziglang.org/download/) or use your package manager. The minimum required version is `0.13.0`.
+0. Ensure you have Zig installed on your system. If not, download it from [the official Zig website](https://ziglang.org/download/) or use your package manager. The minimum required version is `0.13.0`.
 
-2. Clone this repository:
+1. Clone this repository:
    ```bash
    git clone https://github.com/gianni-rosato/md-to-html.git
    cd md-to-html
    ```
 
-3. Build the project:
+2. Build the project:
    ```bash
    zig build -Doptimize=ReleaseSafe
    ```

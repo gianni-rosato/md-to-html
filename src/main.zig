@@ -36,7 +36,7 @@ fn printHelp() !void {
     print("Example usage: md-to-html [input.md] [output.html]\n", .{});
     print("Markdown features supported:\n", .{});
     const supported_features =
-        \\    - Headers
+        \\    - Head from frontmatter
         \\    - Headings (H1 to H4)
         \\    - Bold & italicized text
         \\    - Unordered lists
