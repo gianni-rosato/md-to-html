@@ -87,7 +87,6 @@ pub fn parse(input: []u8, output: []u8, allocator: Allocator) !void {
     defer outfile.close();
 
     _ = try outfile.write(html);
-    print("\x1b[32mSuccess!\x1b[0m\n", .{});
 }
 
 fn inlineMarkdownToHTML(line: []const u8, result: *ArrayList(u8)) !void {
