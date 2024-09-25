@@ -1,0 +1,15 @@
+# macOS
+.DS_Store
+
+# Zig
+zig-cache/
+.zig-cache/
+zig-out/
+/release/
+/debug/
+/build/
+/build-*/
+/docgen_tmp/
+
+# Converter
+*.html
