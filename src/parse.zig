@@ -13,12 +13,13 @@ pub fn parse(input: []u8, output: []u8, allocator: Allocator) !void {
     const markdown = try file.readToEndAlloc(allocator, std.math.maxInt(usize));
     defer allocator.free(markdown);
 
-    var result = ArrayList(u8).init(allocator);
+    var result = std.ArrayList(u8).init(allocator);
     defer result.deinit();
 
-    var in_code_block = false;
-    var is_header = false;
-    var header_present = false;
+    var in_code_block: bool = false;
+    var is_header: bool = false;
+    var header_present: bool = false;
+    var in_list: bool = false;
 
     try result.appendSlice("<!DOCTYPE html>\n");
     try result.appendSlice("<html lang=\"en\">\n");
@@ -26,9 +27,19 @@ pub fn parse(input: []u8, output: []u8, allocator: Allocator) !void {
     var tokens = std.mem.split(u8, markdown, "\n");
     while (tokens.next()) |token| {
         const trimmed = std.mem.trim(u8, token, " ");
-        if (trimmed.len == 0) continue;
+        if (trimmed.len == 0) {
+            if (in_list) {
+                try result.appendSlice("\t</ul>\n");
+                in_list = false;
+            }
+            continue;
+        }
 
         if (std.mem.startsWith(u8, trimmed, "---")) {
+            if (in_list) {
+                try result.appendSlice("\t</ul>\n");
+                in_list = false;
+            }
             is_header = try headToHtml(&result, is_header);
             header_present = true;
             continue;
@@ -49,35 +60,66 @@ pub fn parse(input: []u8, output: []u8, allocator: Allocator) !void {
         }
 
         if (std.mem.startsWith(u8, trimmed, "```")) {
+            if (in_list) {
+                try result.appendSlice("\t</ul>\n");
+                in_list = false;
+            }
             in_code_block = try codeToHtml(trimmed, &result, in_code_block);
         } else if (in_code_block) {
             try result.appendSlice(trimmed);
             try result.appendSlice("\n");
         } else if (std.mem.startsWith(u8, trimmed, "#")) {
+            if (in_list) {
+                try result.appendSlice("\t</ul>\n");
+                in_list = false;
+            }
             try headingToHtml(trimmed, &result);
         } else if (std.mem.startsWith(u8, trimmed, "-")) {
-            try result.appendSlice("\t<li>");
+            if (!in_list) {
+                try result.appendSlice("\t<ul>\n");
+                in_list = true;
+            }
+            try result.appendSlice("\t\t<li>");
             _ = try inlineMarkdownToHTML(trimmed[2..], &result);
-            try result.appendSlice("</li>");
+            try result.appendSlice("</li>\n");
         } else if (std.mem.startsWith(u8, trimmed, "[") and std.mem.indexOf(u8, trimmed, "](") != null) {
+            if (in_list) {
+                try result.appendSlice("\t</ul>\n");
+                in_list = false;
+            }
             try linkToHtml(trimmed, &result);
         } else if (std.mem.startsWith(u8, trimmed, "![") and std.mem.indexOf(u8, trimmed, "](") != null) {
+            if (in_list) {
+                try result.appendSlice("\t</ul>\n");
+                in_list = false;
+            }
             try imageToHtml(trimmed, &result);
         } else if (std.mem.startsWith(u8, trimmed, "<")) {
+            if (in_list) {
+                try result.appendSlice("\t</ul>\n");
+                in_list = false;
+            }
             try result.appendSlice("\t");
             try result.appendSlice(trimmed);
         } else {
+            if (in_list) {
+                try result.appendSlice("\t</ul>\n");
+                in_list = false;
+            }
             try result.appendSlice("\t<p>");
             _ = try inlineMarkdownToHTML(trimmed, &result);
             try result.appendSlice("</p>");
         }
-        if (!in_code_block) {
+        if (!in_code_block and !in_list) {
             try result.appendSlice("\n");
         }
     }
-    if (header_present) {
+
+    if (in_list)
+        try result.appendSlice("\t</ul>\n");
+    if (header_present)
         try result.appendSlice("</body>\n");
-    }
+
     try result.appendSlice("</html>");
 
     const html = try result.toOwnedSlice();
