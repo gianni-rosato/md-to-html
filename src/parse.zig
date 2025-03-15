@@ -24,7 +24,7 @@ pub fn parse(input: []u8, output: []u8, allocator: Allocator) !void {
     try result.appendSlice("<!DOCTYPE html>\n");
     try result.appendSlice("<html lang=\"en\">\n");
 
-    var tokens = std.mem.split(u8, markdown, "\n");
+    var tokens = std.mem.splitSequence(u8, markdown, "\n");
     while (tokens.next()) |token| {
         const trimmed = std.mem.trim(u8, token, " ");
         if (trimmed.len == 0) {
